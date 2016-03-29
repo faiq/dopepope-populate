@@ -37,8 +37,8 @@ build:
     - script:
         name: populate database
         code: |
+          chmod +x /etc/init.d/mongodb
           sudo service mongod start
-          export MONGODB_URL=mongodb://${MONGO_PORT:6}/
           go run main.go
     - internal/docker-push:
         username: $DOCKER_USER
@@ -48,4 +48,4 @@ build:
     - script:
         name: trigger new build
         code: |
-            curl -H "Authorization: Bearer ${token}" -X POST -d "applicationId=asdasfd" https://app.wercker.com/api/v3/builds/
+            curl -H "Authorization: Bearer ${token}" -X POST -d "applicationId=${applicationid}" https://app.wercker.com/api/v3/builds/

@@ -1,13 +1,9 @@
-box: ubuntu
+box: mongo
 build:
-  base-path: /gopath/src/github.com/faiq/dopepope-populate
   steps:
     - script:
       code: |
-        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7F0CEB10
-        echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
         sudo apt-get update
-        sudo apt-get install -y mongodb-org
         sudo apt-get install -y openssh-client
         sudo apt-get install -y curl
         sudo apt-get install -y git
@@ -22,9 +18,10 @@ build:
           sudo mv go /usr/local
           export PATH=$PATH:/usr/local/go/bin
           cd $HOME
-          mkdir -p gopath/src/
-          mkdir -p gopath/bin/
-          export GOPATH=$HOME/gopath
+          mkdir -p gocode/src
+          export GOPATH=$HOME/gocode
+    - setup-go-workspace:
+        package-dir: github.com/faiq/dopepope-populate
     - script:
         name: glide install
         code: |
@@ -37,8 +34,8 @@ build:
     - script:
         name: populate database
         code: |
-          chmod +x /etc/init.d/mongodb
-          sudo service mongod start
+          mongod --fork --logpath /var/log/mongodb.log
+          cd $GOPATH/src/github.com/faiq/dopepope-populate
           go run main.go
     - internal/docker-push:
         username: $DOCKER_USER

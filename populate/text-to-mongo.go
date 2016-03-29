@@ -44,7 +44,7 @@ func ReadLines(filename string) ([]string, error) {
 }
 
 func CleanLinesAndSave(lines []string) error {
-	uri := "mongodb://localhost"
+	uri := "mongodb://127.0.0.1:27017"
 	sess, err := mgo.Dial(uri)
 	if err != nil {
 		fmt.Printf("Can't connect to mongo, go error %v\n", err)

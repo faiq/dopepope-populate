@@ -1,0 +1,3 @@
+.wercker/
+vendor/
+ENVIRONMENT

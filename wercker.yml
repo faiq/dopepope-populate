@@ -1,0 +1,51 @@
+box: ubuntu
+build:
+  base-path: /gopath/src/github.com/faiq/dopepope-populate
+  steps:
+    - script:
+      code: |
+        sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com --recv 7F0CEB10
+        echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.0.list
+        sudo apt-get update
+        sudo apt-get install -y mongodb-org
+        sudo apt-get install -y openssh-client
+        sudo apt-get install -y curl
+        sudo apt-get install -y git
+    - add-to-known_hosts:
+        hostname: github.com
+        fingerprint: "16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48"
+    - script:
+        name: get go
+        code: |
+          sudo curl -O https://storage.googleapis.com/golang/go1.6.linux-amd64.tar.gz
+          sudo tar -xvf go1.6.linux-amd64.tar.gz
+          sudo mv go /usr/local
+          export PATH=$PATH:/usr/local/go/bin
+          cd $HOME
+          mkdir -p gopath/src/
+          mkdir -p gopath/bin/
+          export GOPATH=$HOME/gopath
+    - script:
+        name: glide install
+        code: |
+          export GO15VENDOREXPERIMENT=1
+          export GLIDE_VERSION=0.9.1
+          curl -LO https://github.com/Masterminds/glide/releases/download/${GLIDE_VERSION}/glide-${GLIDE_VERSION}-linux-amd64.tar.gz
+          tar -xvzf glide-${GLIDE_VERSION}-linux-amd64.tar.gz
+          cp linux-amd64/glide /bin/glide
+          glide install
+    - script:
+        name: populate database
+        code: |
+          sudo service mongod start
+          export MONGODB_URL=mongodb://${MONGO_PORT:6}/
+          go run main.go
+    - internal/docker-push:
+        username: $DOCKER_USER
+        password: $DOCKER_PASSWORD
+        repository: faiq/dopepope-populate
+        tag: latest
+    - script:
+        name: trigger new build
+        code: |
+            curl -H "Authorization: Bearer ${token}" -X POST -d "applicationId=asdasfd" https://app.wercker.com/api/v3/builds/
